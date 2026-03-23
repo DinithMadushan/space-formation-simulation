@@ -31,3 +31,6 @@ The simulation includes several mathematically calculated target formations (see
 
 *   ⚙️ **`main.js`**: The entry point that bootstraps the `Simulation` and `UI` once the DOM is ready. It exposes `__sim` to the global window object for easy debugging.
 *   📐 **`formations.js`**: A collection of pure functions responsible for calculating the `{x, y}` target coordinates for any given number of units based on the canvas center and spread multiplier.
+*   🌌 **`simulation.js`**: The core engine managing the canvas, star field, particle pool, rendering loop, and overall state.
+*   🚀 **`particles.js`**: Defines the individual unit (ship) behavior, handling physics (velocity, scattering, targeting), trail history, and rendering.
+*   🎛️ **`ui.js`**: Wires up the DOM controls (buttons, sliders, toggles) to the `Simulation` instance and manages the HUD stats ticker.
