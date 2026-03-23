@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space Formation Simulation</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+    <!-- HUD Header -->
+    <header id="hud-header">
+      <div class="hud-logo">
+        <span class="hud-bracket">[</span>
+        <span class="hud-title">FORMATION<span class="accent">SIM</span></span>
+        <span class="hud-bracket">]</span>
+      </div>
+      <div class="hud-stats">
+        <div class="stat-item">
+          <span class="stat-label">UNITS</span>
+          <span class="stat-value" id="stat-units">0</span>
+        </div>
+        <div class="stat-divider">|</div>
+        <div class="stat-item">
+          <span class="stat-label">FORMATION</span>
+          <span class="stat-value" id="stat-formation">—</span>
+        </div>
+        <div class="stat-divider">|</div>
+        <div class="stat-item">
+          <span class="stat-label">STATUS</span>
+          <span class="stat-value status-live" id="stat-status">LIVE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Canvas -->
+    <canvas id="sim-canvas"></canvas>
+
+    <!-- Control Panel -->
+    <aside id="control-panel">
+      <div class="panel-section">
+        <h3 class="panel-heading">FORMATIONS</h3>
+        <div id="formation-buttons" class="btn-grid">
+          <button class="formation-btn active" data-formation="swarm">SWARM</button>
+          <button class="formation-btn" data-formation="grid">GRID</button>
+          <button class="formation-btn" data-formation="circle">ORBIT</button>
+          <button class="formation-btn" data-formation="spiral">SPIRAL</button>
+          <button class="formation-btn" data-formation="vshape">V-WING</button>
+          <button class="formation-btn" data-formation="diamond">DIAMOND</button>
+          <button class="formation-btn" data-formation="arrow">ARROW</button>
+          <button class="formation-btn" data-formation="helix">HELIX</button>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h3 class="panel-heading">PARAMETERS</h3>
+        <div class="slider-group">
+          <label>UNIT COUNT <span class="slider-val" id="val-count">120</span></label>
+          <input type="range" id="slider-count" min="20" max="300" value="120" step="10" />
+        </div>
+        <div class="slider-group">
+          <label>SPEED <span class="slider-val" id="val-speed">5</span></label>
+          <input type="range" id="slider-speed" min="1" max="10" value="5" step="1" />
+        </div>
+        <div class="slider-group">
+          <label>SPREAD <span class="slider-val" id="val-spread">5</span></label>
+          <input type="range" id="slider-spread" min="1" max="10" value="5" step="1" />
+        </div>
+        <div class="slider-group">
+          <label>TRAIL <span class="slider-val" id="val-trail">6</span></label>
+          <input type="range" id="slider-trail" min="0" max="12" value="6" step="1" />
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h3 class="panel-heading">DISPLAY</h3>
+        <div class="toggle-row">
+          <label class="toggle-label">SHOW GRID</label>
+          <label class="switch">
+            <input type="checkbox" id="toggle-grid" />
+            <span class="slider-switch"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-label">SHOW LINKS</label>
+          <label class="switch">
+            <input type="checkbox" id="toggle-links" />
+            <span class="slider-switch"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-label">GLOW FX</label>
+          <label class="switch">
+            <input type="checkbox" id="toggle-glow" checked />
+            <span class="slider-switch"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <button id="btn-scatter" class="action-btn">SCATTER</button>
+        <button id="btn-pause" class="action-btn">PAUSE</button>
+      </div>
+    </aside>
+
+    <!-- Scanline overlay -->
+    <div id="scanlines"></div>
+
+    <!-- Corner decorations -->
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/particles.js"></script>
+  <script src="js/formations.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
