@@ -1,124 +1,496 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Space Formation Simulation</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Space Formation Simulation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --accent:#00e5ff;
+  --accent2:#ff4d6d;
+  --accent3:#7fff6e;
+  --border:rgba(0,229,255,0.2);
+  --panel-w:220px;
+  --text:#c8e8ff;
+  --text-dim:rgba(200,232,255,0.45);
+  --font-hud:'Orbitron',monospace;
+  --font-mono:'Share Tech Mono',monospace;
+}
+
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:#020408;color:var(--text);
+  font-family:var(--font-mono);
+}
+
+#app{position:relative;width:100vw;height:100vh;overflow:hidden;}
+
+canvas{
+  position:absolute;top:0;left:0;
+  display:block;
+}
+
+/* ── HEADER ── */
+#hud-header{
+  position:absolute;top:0;left:0;right:var(--panel-w);
+  height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  background:linear-gradient(180deg,rgba(0,20,40,.95),rgba(0,10,20,.6));
+  border-bottom:1px solid var(--border);
+  z-index:20;
+  pointer-events:none;
+}
+.hud-logo{display:flex;align-items:center;gap:6px;font-family:var(--font-hud);font-size:.9rem;font-weight:900;letter-spacing:.12em;}
+.hud-bracket{color:var(--accent);opacity:.7;}
+.accent{color:var(--accent);text-shadow:0 0 12px rgba(0,229,255,.7);}
+.hud-stats{display:flex;align-items:center;gap:14px;}
+.stat-item{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.stat-label{font-size:.5rem;color:var(--text-dim);letter-spacing:.2em;}
+.stat-value{font-family:var(--font-hud);font-size:.68rem;color:var(--accent);letter-spacing:.1em;}
+.stat-div{color:var(--border);font-size:.9rem;}
+#stat-status{color:var(--accent3)!important;text-shadow:0 0 8px rgba(127,255,110,.7);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── PANEL ── */
+#panel{
+  position:absolute;top:0;right:0;bottom:0;width:var(--panel-w);
+  background:rgba(4,12,24,.97);
+  border-left:1px solid var(--border);
+  overflow-y:auto;padding:14px 12px 24px;
+  z-index:20;display:flex;flex-direction:column;gap:18px;
+  scrollbar-width:thin;scrollbar-color:var(--accent) transparent;
+}
+.p-sec{display:flex;flex-direction:column;gap:10px;}
+.p-head{
+  font-family:var(--font-hud);font-size:.58rem;font-weight:700;
+  letter-spacing:.25em;color:var(--accent);
+  text-shadow:0 0 10px rgba(0,229,255,.5);
+  padding-bottom:6px;border-bottom:1px solid var(--border);
+}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.f-btn{
+  background:transparent;border:1px solid rgba(0,229,255,.2);
+  color:var(--text-dim);font-family:var(--font-hud);font-size:.57rem;
+  letter-spacing:.06em;padding:9px 4px;cursor:pointer;transition:all .2s;
+}
+.f-btn:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 10px rgba(0,229,255,.35);}
+.f-btn.active{
+  background:rgba(0,229,255,.12);border-color:var(--accent);
+  color:var(--accent);box-shadow:0 0 10px rgba(0,229,255,.4);font-weight:700;
+}
+.sl-group{display:flex;flex-direction:column;gap:5px;}
+.sl-group label{font-size:.6rem;color:var(--text-dim);letter-spacing:.1em;display:flex;justify-content:space-between;}
+.sl-val{color:var(--accent);font-family:var(--font-hud);}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:rgba(0,229,255,.15);outline:none;cursor:pointer;border-radius:0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--accent);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);box-shadow:0 0 8px rgba(0,229,255,.7);}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;background:var(--accent);border:none;border-radius:0;}
+.tog-row{display:flex;justify-content:space-between;align-items:center;}
+.tog-label{font-size:.6rem;letter-spacing:.1em;color:var(--text-dim);}
+.switch{position:relative;display:inline-block;width:34px;height:18px;}
+.switch input{opacity:0;width:0;height:0;}
+.ss{position:absolute;cursor:pointer;inset:0;background:rgba(0,229,255,.06);border:1px solid var(--border);transition:.3s;}
+.ss::before{content:'';position:absolute;height:10px;width:10px;left:3px;bottom:3px;background:var(--text-dim);transition:.3s;}
+.switch input:checked+.ss{background:rgba(0,229,255,.18);border-color:var(--accent);}
+.switch input:checked+.ss::before{transform:translateX(16px);background:var(--accent);box-shadow:0 0 7px rgba(0,229,255,.9);}
+.act-btn{
+  width:100%;padding:10px;background:transparent;
+  border:1px solid var(--accent2);color:var(--accent2);
+  font-family:var(--font-hud);font-size:.6rem;letter-spacing:.16em;
+  cursor:pointer;transition:all .2s;
+}
+.act-btn:hover{background:rgba(255,77,109,.1);box-shadow:0 0 10px rgba(255,77,109,.4);}
+#btn-pause{border-color:rgba(200,232,255,.25);color:var(--text-dim);margin-top:6px;}
+#btn-pause:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.06);box-shadow:0 0 10px rgba(0,229,255,.35);}
+
+/* ── SCANLINES ── */
+#scanlines{
+  position:absolute;inset:0;pointer-events:none;z-index:10;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.05) 3px,rgba(0,0,0,.05) 4px);
+}
+/* ── CORNERS ── */
+.corner{position:absolute;width:22px;height:22px;z-index:25;pointer-events:none;}
+.tl{top:8px;left:8px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);}
+.tr{top:8px;right:calc(var(--panel-w)+8px);border-top:2px solid var(--accent);border-right:2px solid var(--accent);}
+.bl{bottom:8px;left:8px;border-bottom:2px solid var(--accent);border-left:2px solid var(--accent);}
+.br{bottom:8px;right:calc(var(--panel-w)+8px);border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);}
+</style>
 </head>
 <body>
-  <div id="app">
-    <!-- HUD Header -->
-    <header id="hud-header">
-      <div class="hud-logo">
-        <span class="hud-bracket">[</span>
-        <span class="hud-title">FORMATION<span class="accent">SIM</span></span>
-        <span class="hud-bracket">]</span>
+<div id="app">
+  <header id="hud-header">
+    <div class="hud-logo">
+      <span class="hud-bracket">[</span>FORMATION<span class="accent">SIM</span><span class="hud-bracket">]</span>
+    </div>
+    <div class="hud-stats">
+      <div class="stat-item"><span class="stat-label">UNITS</span><span class="stat-value" id="stat-units">120</span></div>
+      <span class="stat-div">|</span>
+      <div class="stat-item"><span class="stat-label">FORMATION</span><span class="stat-value" id="stat-form">SWARM</span></div>
+      <span class="stat-div">|</span>
+      <div class="stat-item"><span class="stat-label">STATUS</span><span class="stat-value" id="stat-status">LIVE</span></div>
+    </div>
+  </header>
+
+  <canvas id="c"></canvas>
+
+  <aside id="panel">
+    <div class="p-sec">
+      <div class="p-head">FORMATIONS</div>
+      <div class="btn-grid">
+        <button class="f-btn active" data-f="swarm">SWARM</button>
+        <button class="f-btn" data-f="grid">GRID</button>
+        <button class="f-btn" data-f="orbit">ORBIT</button>
+        <button class="f-btn" data-f="spiral">SPIRAL</button>
+        <button class="f-btn" data-f="vwing">V-WING</button>
+        <button class="f-btn" data-f="diamond">DIAMOND</button>
+        <button class="f-btn" data-f="arrow">ARROW</button>
+        <button class="f-btn" data-f="helix">HELIX</button>
       </div>
-      <div class="hud-stats">
-        <div class="stat-item">
-          <span class="stat-label">UNITS</span>
-          <span class="stat-value" id="stat-units">0</span>
-        </div>
-        <div class="stat-divider">|</div>
-        <div class="stat-item">
-          <span class="stat-label">FORMATION</span>
-          <span class="stat-value" id="stat-formation">—</span>
-        </div>
-        <div class="stat-divider">|</div>
-        <div class="stat-item">
-          <span class="stat-label">STATUS</span>
-          <span class="stat-value status-live" id="stat-status">LIVE</span>
-        </div>
-      </div>
-    </header>
+    </div>
 
-    <!-- Canvas -->
-    <canvas id="sim-canvas"></canvas>
+    <div class="p-sec">
+      <div class="p-head">PARAMETERS</div>
+      <div class="sl-group"><label>UNITS <span class="sl-val" id="v-count">120</span></label><input type="range" id="s-count" min="20" max="300" value="120" step="10"/></div>
+      <div class="sl-group"><label>SPEED <span class="sl-val" id="v-speed">5</span></label><input type="range" id="s-speed" min="1" max="10" value="5"/></div>
+      <div class="sl-group"><label>SPREAD <span class="sl-val" id="v-spread">5</span></label><input type="range" id="s-spread" min="1" max="10" value="5"/></div>
+      <div class="sl-group"><label>TRAIL <span class="sl-val" id="v-trail">8</span></label><input type="range" id="s-trail" min="0" max="20" value="8"/></div>
+    </div>
 
-    <!-- Control Panel -->
-    <aside id="control-panel">
-      <div class="panel-section">
-        <h3 class="panel-heading">FORMATIONS</h3>
-        <div id="formation-buttons" class="btn-grid">
-          <button class="formation-btn active" data-formation="swarm">SWARM</button>
-          <button class="formation-btn" data-formation="grid">GRID</button>
-          <button class="formation-btn" data-formation="circle">ORBIT</button>
-          <button class="formation-btn" data-formation="spiral">SPIRAL</button>
-          <button class="formation-btn" data-formation="vshape">V-WING</button>
-          <button class="formation-btn" data-formation="diamond">DIAMOND</button>
-          <button class="formation-btn" data-formation="arrow">ARROW</button>
-          <button class="formation-btn" data-formation="helix">HELIX</button>
-        </div>
-      </div>
+    <div class="p-sec">
+      <div class="p-head">DISPLAY</div>
+      <div class="tog-row"><span class="tog-label">GRID OVERLAY</span><label class="switch"><input type="checkbox" id="t-grid"/><span class="ss"></span></label></div>
+      <div class="tog-row"><span class="tog-label">LINK LINES</span><label class="switch"><input type="checkbox" id="t-links"/><span class="ss"></span></label></div>
+      <div class="tog-row"><span class="tog-label">GLOW FX</span><label class="switch"><input type="checkbox" id="t-glow" checked/><span class="ss"></span></label></div>
+    </div>
 
-      <div class="panel-section">
-        <h3 class="panel-heading">PARAMETERS</h3>
-        <div class="slider-group">
-          <label>UNIT COUNT <span class="slider-val" id="val-count">120</span></label>
-          <input type="range" id="slider-count" min="20" max="300" value="120" step="10" />
-        </div>
-        <div class="slider-group">
-          <label>SPEED <span class="slider-val" id="val-speed">5</span></label>
-          <input type="range" id="slider-speed" min="1" max="10" value="5" step="1" />
-        </div>
-        <div class="slider-group">
-          <label>SPREAD <span class="slider-val" id="val-spread">5</span></label>
-          <input type="range" id="slider-spread" min="1" max="10" value="5" step="1" />
-        </div>
-        <div class="slider-group">
-          <label>TRAIL <span class="slider-val" id="val-trail">6</span></label>
-          <input type="range" id="slider-trail" min="0" max="12" value="6" step="1" />
-        </div>
-      </div>
+    <div class="p-sec">
+      <button class="act-btn" id="btn-scatter">⚡ SCATTER</button>
+      <button class="act-btn" id="btn-pause">⏸ PAUSE</button>
+    </div>
+  </aside>
 
-      <div class="panel-section">
-        <h3 class="panel-heading">DISPLAY</h3>
-        <div class="toggle-row">
-          <label class="toggle-label">SHOW GRID</label>
-          <label class="switch">
-            <input type="checkbox" id="toggle-grid" />
-            <span class="slider-switch"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <label class="toggle-label">SHOW LINKS</label>
-          <label class="switch">
-            <input type="checkbox" id="toggle-links" />
-            <span class="slider-switch"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <label class="toggle-label">GLOW FX</label>
-          <label class="switch">
-            <input type="checkbox" id="toggle-glow" checked />
-            <span class="slider-switch"></span>
-          </label>
-        </div>
-      </div>
+  <div id="scanlines"></div>
+  <div class="corner tl"></div><div class="corner tr"></div>
+  <div class="corner bl"></div><div class="corner br"></div>
+</div>
 
-      <div class="panel-section">
-        <button id="btn-scatter" class="action-btn">SCATTER</button>
-        <button id="btn-pause" class="action-btn">PAUSE</button>
-      </div>
-    </aside>
+<script>
+// ═══════════════════════════════════════════════════════
+//  SPACE FORMATION SIMULATION  —  All-in-one engine
+// ═══════════════════════════════════════════════════════
 
-    <!-- Scanline overlay -->
-    <div id="scanlines"></div>
+const PANEL_W = 220;
+const canvas  = document.getElementById('c');
+const ctx     = canvas.getContext('2d');
 
-    <!-- Corner decorations -->
-    <div class="corner corner-tl"></div>
-    <div class="corner corner-tr"></div>
-    <div class="corner corner-bl"></div>
-    <div class="corner corner-br"></div>
-  </div>
+const cfg = {
+  count:120, speed:5, spread:5, trail:8,
+  formation:'swarm',
+  showGrid:false, showLinks:false, glow:true, paused:false,
+};
 
-  <!-- Scripts -->
-  <script src="js/particles.js"></script>
-  <script src="js/formations.js"></script>
-  <script src="js/simulation.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/main.js"></script>
+let W, H, CX, CY, stars=[], particles=[], T=0;
+
+// ─── Resize ──────────────────────────────────────────────
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  W = window.innerWidth  - PANEL_W;
+  H = window.innerHeight;
+  canvas.width  = Math.floor(W * dpr);
+  canvas.height = Math.floor(H * dpr);
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  CX = W / 2;
+  CY = H / 2;
+  buildStars();
+  if(particles.length) applyFormation();
+}
+window.addEventListener('resize', resize);
+
+// ─── Stars ───────────────────────────────────────────────
+function buildStars(){
+  stars=[];
+  const n = Math.floor((W*H)/2600);
+  for(let i=0;i<n;i++){
+    stars.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.4+0.2,
+      a:Math.random()*0.55+0.1,
+      tw:Math.random()*Math.PI*2,
+      sp:0.006+Math.random()*0.022,
+    });
+  }
+}
+
+// ─── Particle factory ────────────────────────────────────
+const COLORS=['#00e5ff','#40c4ff','#69f0ae','#b2ff59','#80d8ff'];
+function mkP(i){
+  return {
+    id:i, x:CX+(Math.random()-.5)*160, y:CY+(Math.random()-.5)*160,
+    vx:(Math.random()-.5)*2, vy:(Math.random()-.5)*2,
+    tx:CX, ty:CY, trail:[],
+    size:2.4+Math.random()*1.3, angle:0,
+    color:COLORS[i%COLORS.length],
+    scattered:false, svx:0, svy:0,
+  };
+}
+function buildParticles(){ particles=[]; for(let i=0;i<cfg.count;i++) particles.push(mkP(i)); }
+function ensureCount(){
+  while(particles.length<cfg.count) particles.push(mkP(particles.length));
+  particles.length=cfg.count;
+}
+
+// ─── Formations ──────────────────────────────────────────
+function fSwarm(n,cx,cy,sp){
+  const r=80+sp*25;
+  return Array.from({length:n},()=>{const a=Math.random()*Math.PI*2,d=r*(.15+Math.random()*.85);return{x:cx+Math.cos(a)*d,y:cy+Math.sin(a)*d};});
+}
+function fGrid(n,cx,cy,sp){
+  const cols=Math.ceil(Math.sqrt(n*1.4)),rows=Math.ceil(n/cols),s=24+sp*5;
+  const ox=(cols-1)*s/2,oy=(rows-1)*s/2;
+  return Array.from({length:n},(_,i)=>({x:cx+(i%cols)*s-ox,y:cy+Math.floor(i/cols)*s-oy}));
+}
+function fOrbit(n,cx,cy,sp){
+  const out=[];
+  const rings=[{r:50+sp*5,c:.10},{r:110+sp*10,c:.22},{r:175+sp*16,c:.32},{r:255+sp*22,c:1}];
+  let placed=0;
+  for(const rng of rings){
+    const take=Math.min(Math.round(rng.c*n),n-placed);
+    if(take<=0)break;
+    for(let i=0;i<take;i++){const a=(i/take)*Math.PI*2-Math.PI/2;out.push({x:cx+Math.cos(a)*rng.r,y:cy+Math.sin(a)*rng.r});}
+    placed+=take; if(placed>=n)break;
+  }
+  return out;
+}
+function fSpiral(n,cx,cy,sp){
+  const turns=3+sp*.25,maxR=200+sp*20;
+  return Array.from({length:n},(_,i)=>{const t=i/n,a=t*turns*Math.PI*2,r=t*maxR;return{x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r};});
+}
+function fVwing(n,cx,cy,sp){
+  const s=22+sp*4.5,pts=[{x:cx,y:cy-Math.floor(n/2)*s*.5}];
+  for(let i=1;i<n;i++){const side=i%2===0?1:-1,rank=Math.ceil(i/2);pts.push({x:cx+side*rank*s,y:cy-Math.floor(n/2)*s*.5+rank*s*.9});}
+  return pts;
+}
+function fDiamond(n,cx,cy,sp){
+  const s=24+sp*5,out=[{x:cx,y:cy}];
+  let placed=1;
+  for(let ring=1;placed<n;ring++){
+    for(let i=0;i<ring*4&&placed<n;i++){
+      const side=Math.floor(i/ring),pos=i%ring;
+      let x,y;
+      if(side===0){x=cx+(ring-pos)*s;y=cy-pos*s;}
+      else if(side===1){x=cx+pos*s;y=cy+(ring-pos)*s;}
+      else if(side===2){x=cx-(ring-pos)*s;y=cy+pos*s;}
+      else{x=cx-pos*s;y=cy-(ring-pos)*s;}
+      out.push({x,y});placed++;
+    }
+  }
+  return out;
+}
+function fArrow(n,cx,cy,sp){
+  const s=22+sp*4,pts=[];
+  let placed=0,row=0;
+  while(placed<n){const w=row+1;for(let c=0;c<w&&placed<n;c++){pts.push({x:cx+(c-(w-1)/2)*s,y:cy+row*s*.85});placed++;}row++;}
+  const totalH=(row-1)*s*.85;
+  return pts.map(p=>({x:p.x,y:p.y-totalH/2}));
+}
+function fHelix(n,cx,cy,sp){
+  const halfH=180+sp*18,r=55+sp*7,turns=2.5;
+  return Array.from({length:n},(_,i)=>{
+    const strand=i%2,t=Math.floor(i/2)/Math.ceil(n/2),y=-halfH+t*halfH*2,a=t*turns*Math.PI*2+strand*Math.PI;
+    return{x:cx+Math.cos(a)*r,y:cy+y};
+  });
+}
+
+const FMAP={swarm:fSwarm,grid:fGrid,orbit:fOrbit,spiral:fSpiral,vwing:fVwing,diamond:fDiamond,arrow:fArrow,helix:fHelix};
+
+function applyFormation(){
+  ensureCount();
+  const fn=FMAP[cfg.formation]||fSwarm;
+  const pos=fn(cfg.count,CX,CY,cfg.spread);
+  while(pos.length<cfg.count) pos.push({x:CX,y:CY});
+  particles.forEach((p,i)=>{p.tx=pos[i].x;p.ty=pos[i].y;p.scattered=false;});
+}
+
+// ─── Scatter ─────────────────────────────────────────────
+function scatter(){
+  particles.forEach(p=>{
+    p.scattered=true;
+    const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,f=12+Math.random()*8;
+    p.svx=dx/d*f; p.svy=dy/d*f;
+  });
+}
+
+// ─── Update ──────────────────────────────────────────────
+function updateP(p){
+  if(cfg.trail>0){
+    p.trail.push({x:p.x,y:p.y});
+    while(p.trail.length>cfg.trail) p.trail.shift();
+  } else { p.trail=[]; }
+
+  if(p.scattered){
+    p.vx=p.vx*.88+p.svx*.12; p.vy=p.vy*.88+p.svy*.12;
+    p.svx*=.93; p.svy*=.93;
+    if(p.x<0){p.x=0;p.vx=Math.abs(p.vx)*.5;}
+    if(p.x>W){p.x=W;p.vx=-Math.abs(p.vx)*.5;}
+    if(p.y<0){p.y=0;p.vy=Math.abs(p.vy)*.5;}
+    if(p.y>H){p.y=H;p.vy=-Math.abs(p.vy)*.5;}
+  } else {
+    const ease=0.03+cfg.speed*0.009;
+    p.vx+=(p.tx-p.x)*ease; p.vy+=(p.ty-p.y)*ease;
+    p.vx*=0.78; p.vy*=0.78;
+  }
+  p.x+=p.vx; p.y+=p.vy;
+  const spd=Math.hypot(p.vx,p.vy);
+  if(spd>0.05) p.angle=Math.atan2(p.vy,p.vx)+Math.PI/2;
+}
+
+// ─── Draw particle ────────────────────────────────────────
+function drawP(p){
+  // Trail
+  const tl=p.trail.length;
+  if(tl>1){
+    for(let i=1;i<tl;i++){
+      const frac=i/tl;
+      ctx.beginPath();
+      ctx.moveTo(p.trail[i-1].x,p.trail[i-1].y);
+      ctx.lineTo(p.trail[i].x,p.trail[i].y);
+      ctx.strokeStyle=p.color;
+      ctx.globalAlpha=frac*0.38;
+      ctx.lineWidth=frac*p.size*.9;
+      ctx.lineCap='round';
+      ctx.stroke();
+    }
+  }
+  // Ship
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  ctx.rotate(p.angle);
+  ctx.globalAlpha=0.9;
+  if(cfg.glow){ctx.shadowColor=p.color;ctx.shadowBlur=9;}
+  const s=p.size;
+  ctx.fillStyle=p.color;
+  ctx.beginPath();
+  ctx.moveTo(0,-s*2.5);
+  ctx.lineTo(s*1.1,s*.95);ctx.lineTo(s*.42,s*.42);
+  ctx.lineTo(0,s*1.35);
+  ctx.lineTo(-s*.42,s*.42);ctx.lineTo(-s*1.1,s*.95);
+  ctx.closePath();ctx.fill();
+  if(cfg.glow){
+    ctx.shadowBlur=18;ctx.fillStyle='#fff';ctx.globalAlpha=0.6;
+    ctx.beginPath();ctx.arc(0,s*1.35,s*.38,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ─── Render frame ─────────────────────────────────────────
+function render(){
+  T+=0.016;
+  ctx.globalAlpha=1; ctx.shadowBlur=0;
+
+  // BG
+  const g=ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*.8);
+  g.addColorStop(0,'#041326');
+  g.addColorStop(.5,'#020b18');
+  g.addColorStop(1,'#010209');
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,W,H);
+
+  // Stars
+  for(const s of stars){
+    ctx.globalAlpha=Math.max(0,s.a+Math.sin(T*s.sp*60+s.tw)*.22);
+    ctx.fillStyle='#cce8ff';
+    ctx.shadowColor='#fff';ctx.shadowBlur=s.r>1?3:0;
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
+  }
+  ctx.shadowBlur=0;ctx.globalAlpha=1;
+
+  // Grid
+  if(cfg.showGrid){
+    ctx.strokeStyle='rgba(0,229,255,0.07)';ctx.lineWidth=.5;
+    for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  }
+
+  // Links
+  if(cfg.showLinks){
+    const mx=90,mx2=mx*mx;
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d2=dx*dx+dy*dy;
+        if(d2<mx2){
+          ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(0,229,255,${((1-d2/mx2)*.18).toFixed(3)})`;
+          ctx.lineWidth=.5;ctx.globalAlpha=1;ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Reticle
+  const pr=18+Math.sin(T*.6)*4;
+  ctx.save();ctx.globalAlpha=.2;ctx.strokeStyle='#00e5ff';ctx.lineWidth=.8;
+  ctx.shadowColor='#00e5ff';ctx.shadowBlur=6;
+  ctx.beginPath();ctx.arc(CX,CY,pr,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(CX-pr-16,CY);ctx.lineTo(CX+pr+16,CY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(CX,CY-pr-16);ctx.lineTo(CX,CY+pr+16);ctx.stroke();
+  ctx.restore();
+
+  // Particles
+  for(const p of particles){ updateP(p); drawP(p); }
+}
+
+// ─── Loop ────────────────────────────────────────────────
+function loop(){ requestAnimationFrame(loop); if(!cfg.paused) render(); }
+
+// ─── UI ──────────────────────────────────────────────────
+document.querySelectorAll('.f-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    cfg.formation=btn.dataset.f;
+    applyFormation();
+    document.getElementById('stat-form').textContent=cfg.formation.toUpperCase();
+  });
+});
+
+function sl(sid,vid,key,cb){
+  const el=document.getElementById(sid),vl=document.getElementById(vid);
+  el.addEventListener('input',()=>{const v=+el.value;vl.textContent=v;cfg[key]=v;if(cb)cb();});
+}
+sl('s-count','v-count','count',()=>{ensureCount();applyFormation();});
+sl('s-speed','v-speed','speed');
+sl('s-spread','v-spread','spread',()=>applyFormation());
+sl('s-trail','v-trail','trail');
+
+document.getElementById('t-grid').addEventListener('change',e=>cfg.showGrid=e.target.checked);
+document.getElementById('t-links').addEventListener('change',e=>cfg.showLinks=e.target.checked);
+document.getElementById('t-glow').addEventListener('change',e=>cfg.glow=e.target.checked);
+
+document.getElementById('btn-scatter').addEventListener('click',()=>{scatter();setTimeout(()=>applyFormation(),2200);});
+
+document.getElementById('btn-pause').addEventListener('click',()=>{
+  cfg.paused=!cfg.paused;
+  const btn=document.getElementById('btn-pause');
+  btn.textContent=cfg.paused?'▶ RESUME':'⏸ PAUSE';
+  const s=document.getElementById('stat-status');
+  s.textContent=cfg.paused?'PAUSED':'LIVE';
+  s.style.animation=cfg.paused?'none':'blink 2s ease-in-out infinite';
+  s.style.color=cfg.paused?'var(--accent2)':'';
+});
+
+setInterval(()=>{document.getElementById('stat-units').textContent=particles.length;},500);
+
+// ─── Boot ────────────────────────────────────────────────
+resize();
+buildParticles();
+applyFormation();
+loop();
+</script>
 </body>
 </html>
